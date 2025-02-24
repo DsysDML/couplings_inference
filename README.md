@@ -23,11 +23,7 @@ Understanding complex interactions directly from data is crucial across many dis
 
 
 ## References 
-
-[1] Decelle, A., Gómez, A. D. J. N., & Seoane, B. (2025). Inferring High-Order Couplings with Neural Networks. _arXiv preprint arXiv:2501.06108_.
-
-[2] Trinquier, J., Uguzzoni, G., Pagnani, A., Zamponi, F., & Weigt, M. (2021). Efficient generative modeling of protein sequences using simple autoregressive models. _Nature communications_, 12(1), 5800.
-
-[3] Ekeberg, M., Lövkvist, C., Lan, Y., Weigt, M., & Aurell, E. (2013). Improved contact prediction in proteins: using pseudolikelihoods to infer Potts models. _Physical Review E—Statistical, Nonlinear, and Soft Matter Physics_, 87(1), 012707.
-
-[4] Ekeberg, M., Hartonen, T., & Aurell, E. (2014). Fast pseudolikelihood maximization for direct-coupling analysis of protein structure from many homologous amino-acid sequences. _Journal of Computational Physics_, 276, 341-356.
+1. Decelle, A., Gómez, A. D. J. N., & Seoane, B. (2025). Inferring High-Order Couplings with Neural Networks. _arXiv preprint arXiv:2501.06108_.
+2. Trinquier, J., Uguzzoni, G., Pagnani, A., Zamponi, F., & Weigt, M. (2021). Efficient generative modeling of protein sequences using simple autoregressive models. _Nature communications_, 12(1), 5800.
+3. Ekeberg, M., Lövkvist, C., Lan, Y., Weigt, M., & Aurell, E. (2013). Improved contact prediction in proteins: using pseudolikelihoods to infer Potts models. _Physical Review E—Statistical, Nonlinear, and Soft Matter Physics_, 87(1), 012707.
+4. Ekeberg, M., Hartonen, T., & Aurell, E. (2014). Fast pseudolikelihood maximization for direct-coupling analysis of protein structure from many homologous amino-acid sequences. _Journal of Computational Physics_, 276, 341-356.
