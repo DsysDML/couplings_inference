@@ -18,7 +18,7 @@ Understanding complex interactions directly from data is crucial across many dis
 - [Data:](https://github.com/DsysDML/couplings_inference/tree/main/data)
     - **PF00072.fasta:** Multiple Sequence Analysis data of the Response Regulator Receiver domain (PF00072) [2]. The original dataset can be found [here](https://github.com/pagnani/ArDCAData).
     - **PF00072_struct.dat:** Structural data for the Response Regulator Receiver domain (PF00072) [2]. The original dataset can be found [here](https://github.com/pagnani/ArDCAData).
-    - **plmDCA_score_PF00072.txt:** Contact prediction score with plmDCA used to compare our results. This score was computed using this [repository](https://github.com/pagnani/PlmDCA.jl) [3,4]. 
+    - **plmDCA_score_PF00072.txt:** Contact prediction score with plmDCA [3,4] used to compare our results. This score was computed using this [repository](https://github.com/pagnani/PlmDCA.jl). 
 - [models:](https://github.com/DsysDML/couplings_inference/tree/main/models) A trained RBM model used as example.
 
 
