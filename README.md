@@ -20,7 +20,8 @@ Understanding complex interactions directly from data is crucial across many dis
     - **PF00072_struct.dat:** Structural data for the Response Regulator Receiver domain (PF00072) [2]. The original dataset can be found [here](https://github.com/pagnani/ArDCAData).
     - **PF00072_train=0.6.fasta, PF00072_test=0.4.fasta:** training and test datasets used for RBM training. Both were derived from the original **PF00072.fasta** dataset.
     - **plmDCA_score_PF00072_train=0.6.txt:** Contact prediction score with plmDCA [3,4] used to compare our results. This score was computed using this [repository](https://github.com/pagnani/PlmDCA.jl).
-  Datasets of the inverse Blume-Capel problem used to benchmark our RBM training in [1]:
+
+   Datasets of the inverse Blume-Capel problem used to benchmark our RBM training in [1]:
     - **1D_Blume_nsamples=100000_L=51_beta=0.2_J3=1.0_J2=1.0_h=0.0.h5,**
     - **1D_Blume_nsamples=100000_L=51_beta=0.2_J3=2.0_J2=1.0_h=0.0.h5,**
     - **1D_Blume_nsamples=100000_L=51_beta=0.2_J3=3.0_J2=1.0_h=0.0.h5.** 
