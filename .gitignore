@@ -173,6 +173,7 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# program to reduce the size of a RBM
+# programs to reduce the size of a RBM
 trimming_model_files.py
+trimming_model_files_nic.py
 

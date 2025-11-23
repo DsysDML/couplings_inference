@@ -3,11 +3,78 @@ import pandas as pd
 import torch
 from scipy.stats import norm
 import itertools
-
+from typing import Tuple
 from torch import Tensor
+import h5py
+
+# reading and loading the models
+def get_saved_updates(model_fname: str) -> np.ndarray:
+    """
+    Retrieve the saved updates from a model file.
+
+    Args:
+        model_fname (str): Path to the model file.
+
+    Returns:
+        np.ndarray: Array of saved updates.
+    """
+    with h5py.File(model_fname, 'r') as f:
+        updates = np.array([int(k.split('_')[1]) for k in f.keys()])
+    return np.sort(updates)
+
+def get_model_params(model_fname: str, update: int, device: str = 'cpu', dtype: torch.dtype =torch.float32) -> Tuple[Tensor, Tensor, Tensor]:
+    """
+    Load the model parameters from a model file for a specific update.
+    Args:
+        model_fname (str): Path to the model file.
+        update (int): Specific update to load.
+        device (str): Device to load the parameters onto.
+        dtype (torch.dtype): Data type of the parameters.
+    Returns:
+        Tuple[Tensor, Tensor, Tensor]: Weight matrix, visible bias, hidden bias.
+    """
+    with h5py.File(model_fname, 'r') as f:
+        grp = f[f'update_{update}']
+        weight_matrix = torch.tensor(grp['weight_matrix'][:], device=device, dtype=dtype)
+        vbias = torch.tensor(grp['vbias'][:], device=device, dtype=dtype)
+        hbias = torch.tensor(grp['hbias'][:], device=device, dtype=dtype)
+    return weight_matrix, vbias, hbias
+
+# RBM Fixing Gauge
+def fix_gauge_RBM(W: Tensor, 
+                  b: Tensor, 
+                  c: Tensor, 
+                  gauge: str ='zero-sum') -> None:
+    """
+    a Function to fix the gauge in Potts-Bernoulli RBMs
+
+    Args:
+        W (Tensor): weight matrix (dim: q x Nv x Nh).
+        b (Tensor): visible bias (dim: q x Nv).
+        c (Tensor): hidden bias (dim: Nh).
+        gauge (str): name of the gauge that is going to be fixed. 
+            It could be either 'zero-sum' or 'lattice-gas'.
+    
+    Returns:
+        None
+    """
+
+    if gauge == 'zero-sum':
+        A = W.mean(axis=0)
+        bt = b.mean(axis=0)
+
+    elif gauge == 'lattice-gas':
+        # the zero is set in the last color
+        A = W[-1,:,:]
+        bt= b[-1,:]
+    else:
+        return 'Gauge does not exist'
+
+    b -= bt
+    c += A.sum(axis=0)
+    W -= A
 
 ## DCA and Contact Prediction Functions
-
 def matrix_to_table(F2:np.ndarray) -> pd.DataFrame:
     """
     Convert a symmetric score matrix into a table format.
@@ -94,7 +161,7 @@ def filter_seq_distance(table: pd.DataFrame,
 
 def ROC_curve(xt: np.ndarray, 
               x: np.ndarray, 
-              normalize=True) -> tuple[np.ndarray, np.ndarray, float]:
+              normalize: bool =True) -> Tuple[np.ndarray, np.ndarray, float]:
     """
     Compute the Receiver Operating Characteristic (ROC) curve and its area.
 
@@ -132,8 +199,9 @@ def ROC_curve(xt: np.ndarray,
 
     return fp, tp, s
 
+
 def PPV_curve(xt: np.ndarray, 
-              x: np.ndarray) -> tuple[np.ndarray, np.ndarray, float]:
+              x: np.ndarray) -> Tuple[np.ndarray, np.ndarray, float]:
     """
     Compute the Positive Predictive Value (PPV) curve and its area.
 
@@ -146,6 +214,7 @@ def PPV_curve(xt: np.ndarray,
         ppv (ndarray): Positive predictive values for each rank.
         s (float): Area under the PPV curve.
     """
+
     N = xt.size
     if np.isnan(x).sum() != 0:
         return np.zeros(N + 1), np.zeros(N + 1), np.nan
@@ -161,6 +230,61 @@ def PPV_curve(xt: np.ndarray,
         ppv[n-1] = xt[:n].sum() / n
         s += ppv[n-1]
     
+    return p, ppv, s
+
+# creating a ROC curve dependent on threshold of physical distance
+def ROC_curve_distance(distance_table: pd.DataFrame, 
+                       score_table: pd.DataFrame, 
+                       k: int, 
+                       threshold: float) -> Tuple[np.ndarray, np.ndarray, float]:
+    """
+    Returns the Receiver Operating Characteristic for contact prediction given a distance table and a threshold.
+
+    Args:
+        distance_table (pd.DataFrame): pairwise distance table in the custom fomrat.
+        score_table (pd.DataFrame): score table in the custom format.
+        k (int): threshold in the site distance.
+        threshold (float): threshold in the physical distance in Armstrong units to consider a contact.
+    
+    Returns:
+        fp (ndarray): False positive counts (normalized if `normalize=True`).
+        tp (ndarray): True positive counts (normalized if `normalize=True`).
+        s (float): Area under the ROC curve.
+    """
+
+    name = score_table.columns[-1]
+    contact_table = distance_table[['|i-j|']].join(distance_table[['r']] < threshold)
+    contact_table = contact_table.join(score_table[name])
+    contact_table = contact_table[contact_table['|i-j|'] > k]
+    xt, x = contact_table['r'].values, contact_table[name].values
+    
+    fp, tp, s = ROC_curve(xt, x)
+    return fp, tp, s
+
+# creating a ROC curve dependent on threshold of physical distance
+def PPV_curve_distance(distance_table, score_table, k, threshold):
+    """
+    Returns the Receiver Operating Characteristic for contact prediction given a distance table and a threshold.
+
+    Args:
+        distance_table (pd.DataFrame): pairwise distance table in the custom fomrat.
+        score_table (pd.DataFrame): score table in the custom format.
+        k (int): threshold in the site distance.
+        threshold (float): threshold in the physical distance in Armstrong units to consider a contact.
+
+    Returns
+        p (ndarray): Number of predictions considered (1 to N).
+        ppv (ndarray): Positive predictive values for each rank.
+        s (float): Area under the PPV curve.
+    """
+
+    name = score_table.columns[-1]
+    contact_table = distance_table[['|i-j|']].join(distance_table[['r']] < threshold)
+    contact_table = contact_table.join(score_table[name])
+    contact_table = contact_table[contact_table['|i-j|'] > k]
+    xt, x = contact_table['r'].values, contact_table[name].values
+    
+    p, ppv, s = PPV_curve(xt, x)
     return p, ppv, s
 
 # Gaussian Mixture Fitting
@@ -188,7 +312,7 @@ def fit_gaussian_mixture(W: Tensor,
                          a: int, 
                          splits: int =0, 
                          sigma: float=5, 
-                         nsteps: int=100) -> tuple[np.ndarray, np.ndarray]:
+                         nsteps: int=100) -> Tuple[np.ndarray, np.ndarray]:
     """Fit a higher-order gaussian mixture to the distribution of randomly drawn weights from a hidden column.
 
     Args:
@@ -218,7 +342,156 @@ def fit_gaussian_mixture(W: Tensor,
         gauss_mod += (1/q**splits)*norm.pdf(x, loc=mean, scale=std_mod)
     return x, gauss_mod
 
+# Beyond the Gaussian Approximation Functions
+def find_outliers_index(W: np.ndarray, 
+                        z_score_threshold: float, 
+                        sum_vis_dim: bool =True) -> list:
+    """
+    It dentifies indices of sites whose associated weights behave as outliers
+    according to the z-score of the logarithmic norm of their weight vectors.
+    
+    Args:
+        W (np.ndarray): Weight matrix (shape: q x Nv x Nh).
+        z_score_threshold (float): Z-score threshold used to determine outliers. 
+        sum_vis_dim (bool): If true, sums over the visible node's dimension.
 
+    Returns:
+        list: A list of indices where outliers were detected.
+    
+    """
+    F = np.log(np.linalg.norm(W, axis=0))
+    mean = np.mean(F, axis=0)
+    std = np.std(F, axis=0)
+    z_scores = ((F - mean)/ std) > z_score_threshold
+    if sum_vis_dim:
+        z_scores = z_scores.sum(axis=0)
+    return (np.where(z_scores)[0]).tolist()
+
+
+def create_outliers_dict(W: np.ndarray, z_score_threshold: float) -> dict :
+    """
+    Create a dictionary with the sites whoze associated weights behave as outilers
+    for every hidden node.
+    
+    Args:
+        W (np.ndarray): Weight matrix (shape: q x Nv x Nh).
+        z_score_threshold (float): Z-score threshold used to determine outliers. 
+    
+    Returns:
+        dict: A dictionary where the key is a hidden node index and the value is 
+            a list with outliers indixes.
+    """
+    # creating dictionary
+    _, _, Nh = W.shape
+    outliers_list = []
+    for a in range(Nh):
+        Nv_outliers = find_outliers_index(W[:,:,a], z_score_threshold, False)
+        outliers_list.append((int(a), Nv_outliers))
+    return dict(outliers_list)
+
+def k_unsqueeze(Wk: Tensor, 
+                 n: int, 
+                 k: int) -> Tensor:
+    """
+    A function to apply unsqueeze multiple times in the positions 1 and 0.
+    
+    Args:
+        Wk (Tensor): Tensor to unsqueeze.
+        n (int), k (int): Indicates how many times we will unsqueeze the tensor Wk.
+    
+    Returns:
+        Tensor: an unsqueezed Tensor.    
+    """
+    
+    Wk_unsqueezed = Wk.clone()
+    for _ in range(n - (k + 1)):
+        Wk_unsqueezed = Wk_unsqueezed.unsqueeze(1)
+    for _ in range(k):
+        Wk_unsqueezed = Wk_unsqueezed.unsqueeze(0)
+    return Wk_unsqueezed
+
+
+# Blume-Capel Model Analysis Functions
+def couplings_zero(J: np.ndarray) -> np.ndarray:
+    """
+    Selects the couplings that should be zero in the Blume-Capel model from the 
+    coupling tensor J of the RBM.
+
+    Args:
+        J (ndarray): Coupling tensor of shape (q, q, Nv, Nv).
+
+    Returns:
+        ndarray: Array of couplings that should be zero.
+    """
+    q,_,Nv,_ = J.shape
+    couplings_zero = []
+    for i in range(1, Nv):
+        for j in range(i):
+            couplings_zero.append(J[2,1,i,j])
+            couplings_zero.append(J[2,0,i,j])
+            couplings_zero.append(J[1,2,i,j])
+            couplings_zero.append(J[0,2,i,j])
+            couplings_zero.append(J[2,2,i,j])
+    return np.array(couplings_zero)
+
+def couplings_non_zero(J):
+    """
+    Selects the couplings that should be non-zero in the 1D Blume-Capel model from the 
+    coupling tensor J of the RBM.
+    
+    Args:
+        J (ndarray): Coupling tensor of shape (q, q, Nv, Nv).   
+    
+    Returns:    
+        ndarray: Array of couplings that should be non-zero.
+    """
+    q,_,Nv,_ = J.shape
+    couplings = []
+    for i in range(1, Nv):
+        for j in range(i):
+            couplings.append(J[0,0,i,j])
+            couplings.append(J[1,1,i,j])
+            couplings.append(J[0,1,i,j])
+            couplings.append(J[1,0,i,j])
+    return np.array(couplings)
+
+def root_mean_squared_error(J: np.ndarray, 
+                            beta:float =0.2):
+    """
+    Computes the root mean squared error between the couplings in the 1D Blume-Capel model
+    and the couplings inferred with the RBM.
+    
+    Args:
+        J (ndarray): Coupling tensor of shape (q, q, Nv, Nv).
+        beta (float): Coupling strength in the Blume-Capel model.
+    
+    Returns:
+        float: Root mean squared error.
+    """
+    q,_,Nv,_ = J.shape
+    error_list = []
+    
+    for i in range(1, Nv):
+        for j in range(i):
+            if (i - j) % Nv == 1:
+                coupling_teo = beta
+            else:
+                coupling_teo = 0.0
+
+            # zeros
+            error_list.append((J[2,1,i,j] - 0.0)**2)
+            error_list.append((J[2,0,i,j] - 0.0)**2)
+            error_list.append((J[1,2,i,j] - 0.0)**2)
+            error_list.append((J[0,2,i,j] - 0.0)**2)
+            error_list.append((J[2,2,i,j] - 0.0)**2)
+
+            # non-zeros
+            error_list.append((J[0,0,i,j] - coupling_teo)**2)
+            error_list.append((J[1,1,i,j] - coupling_teo)**2)
+            error_list.append((J[0,1,i,j] + coupling_teo)**2)
+            error_list.append((J[1,0,i,j] + coupling_teo)**2)
+    
+    return np.sqrt(np.array(error_list).mean())
 
 
 
