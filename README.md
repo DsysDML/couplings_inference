@@ -5,7 +5,7 @@
 General repository for couplings inference. Code for the Ref. [1].
 
 ## Introduction
-Understanding complex interactions directly from data is crucial across many disciplines. Many-body interactions shape physics, biology, neuroscience, and social systems, playing a key role in emergence, regulation, and coordination. Although generative models excel at identifying high-order correlations, deriving meaningful insights from them remains challenging. Here, we tackle this problem for generic categorical energy-based generative models and introduce an efficient algorithm to extract those higher-order couplings from Restricted Boltzmann Machines (RBMs) at affordable times.
+Understanding complex interactions directly from data is crucial across many disciplines. Many-body interactions shape physics, biology, neuroscience, and social systems, playing a key role in emergence, regulation, and coordination. Although generative models excel at identifying high-order correlations, deriving meaningful insights from them remains challenging. Here, we tackle this problem for generic categorical energy-based generative models and introduce an efficient algorithm to extract effective higher-order couplings from Restricted Boltzmann Machines (RBMs) at affordable times.
 
 <p align="center">
   <img src=https://github.com/DsysDML/couplings_inference/blob/main/figures/pipeline.png?raw=true height="400">
@@ -18,9 +18,12 @@ Understanding complex interactions directly from data is crucial across many dis
 - [Data:](https://github.com/DsysDML/couplings_inference/tree/main/data)
     - **PF00072.fasta:** Multiple Sequence Analysis data of the Response Regulator Receiver domain (PF00072) [2]. The original dataset can be found [here](https://github.com/pagnani/ArDCAData).
     - **PF00072_struct.dat:** Structural data for the Response Regulator Receiver domain (PF00072) [2]. The original dataset can be found [here](https://github.com/pagnani/ArDCAData).
-    - **PF00072_train=0.6.fasta, PF00072_test=0.4.fasta:** training and test datasets used in RBM training.
+    - **PF00072_train=0.6.fasta, PF00072_test=0.4.fasta:** training and test datasets used for RBM training. Both were derived from the original **PF00072.fasta** dataset.
     - **plmDCA_score_PF00072_train=0.6.txt:** Contact prediction score with plmDCA [3,4] used to compare our results. This score was computed using this [repository](https://github.com/pagnani/PlmDCA.jl).
-    - **1D_Blume_nsamples=100000_L=51_beta=0.2_J3=1.0_J2=1.0_h=0.0.h5, 1D_Blume_nsamples=100000_L=51_beta=0.2_J3=2.0_J2=1.0_h=0.0.h5, 1D_Blume_nsamples=100000_L=51_beta=0.2_J3=3.0_J2=1.0_h=0.0.h5:** Datasets of the inverse Blume-Capel problem used to benchmark our RBM training in [1].
+  Datasets of the inverse Blume-Capel problem used to benchmark our RBM training in [1]:
+    - **1D_Blume_nsamples=100000_L=51_beta=0.2_J3=1.0_J2=1.0_h=0.0.h5,**
+    - **1D_Blume_nsamples=100000_L=51_beta=0.2_J3=2.0_J2=1.0_h=0.0.h5,**
+    - **1D_Blume_nsamples=100000_L=51_beta=0.2_J3=3.0_J2=1.0_h=0.0.h5.** 
 - [models:](https://github.com/DsysDML/couplings_inference/tree/main/models) Trained RBM models used as examples.
 
 
