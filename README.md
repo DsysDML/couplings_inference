@@ -2,8 +2,6 @@
 
 [![badge](https://img.shields.io/badge/arXiv-2501.06108%20-red)](https://arxiv.org/abs/2501.06108)
 
-General repository for couplings inference. Code for the Ref. [1].
-
 ## Introduction
 Understanding complex interactions directly from data is crucial across many disciplines. Many-body interactions shape physics, biology, neuroscience, and social systems, playing a key role in emergence, regulation, and coordination. Although generative models excel at identifying high-order correlations, deriving meaningful insights from them remains challenging. Here, we tackle this problem for generic categorical energy-based generative models and introduce an efficient algorithm to extract effective higher-order couplings from Restricted Boltzmann Machines (RBMs) at affordable times.
 
